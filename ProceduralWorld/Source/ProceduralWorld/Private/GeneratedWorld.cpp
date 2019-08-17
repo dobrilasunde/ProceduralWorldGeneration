@@ -159,7 +159,7 @@ Block* AGeneratedWorld::GetBlockFromWorldPosition(FVector worldPosition)
 /*----------------------------------------------------------------------------------------------------*/
 Chunk* AGeneratedWorld::GetChunk(int32 x, int32 y, int32 z)
 {
-	if (x < 0 || y < 0 || z < 0 || x > worldX || y > worldY)
+	if (x < 0 || y < 0 || z < 0 || x > worldX || y > worldY || z > 0)
 	{
 		return nullptr;
 	}
