@@ -22,5 +22,6 @@ public:
 	int y;
 	int z;
 	bool isSolid;
+	FVector localPosition;
 	FVector worldPosition;
 };

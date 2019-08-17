@@ -3,6 +3,8 @@
 #include "GodPlayerController.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
+#include "GeneratedWorld.h"
+#include "Block.h"
 /*----------------------------------------------------------------------------------------------------*/
 AGodPlayerController::AGodPlayerController()
 {
@@ -29,7 +31,11 @@ void AGodPlayerController::FindMousePosition()
 		AActor* hitActor = hitResult.GetActor();
 		UPrimitiveComponent* hitComponent = hitResult.GetComponent();
 
-		CreateBox(hitResult.ImpactPoint);
+		Block* block = GetGeneratedWorld(this)->GetBlockFromWorldPosition(hitResult.ImpactPoint);
+		if (block != nullptr)
+		{
+			CreateBox(block->worldPosition + FVector::UpVector * 100.0f / 2.0f);
+		}
 	}
 }
 /*----------------------------------------------------------------------------------------------------*/

@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GodPlayerController.generated.h"
 /*----------------------------------------------------------------------------------------------------*/
+class AGeneratedWorld;
+/*----------------------------------------------------------------------------------------------------*/
 UCLASS()
 class PROCEDURALWORLD_API AGodPlayerController : public APlayerController
 {

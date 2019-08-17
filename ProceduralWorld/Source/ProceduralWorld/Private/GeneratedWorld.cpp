@@ -9,12 +9,27 @@
 #include "Runtime/Core/Public/HAL/RunnableThread.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "NoiseBase.h"
+#include "Chunk.h"
+#include "ProceduralWorldGameModeBase.h"
+#include "Runtime/Engine/Classes/Materials/Material.h"
+#include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
+#include "BaseNoise.h"
 /*----------------------------------------------------------------------------------------------------*/
 // Sets default values
 AGeneratedWorld::AGeneratedWorld(): mThreadCounter(0)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	
+	static ConstructorHelpers::FObjectFinder<UMaterial>Material(TEXT("Material'/Game/Textures/M_Tiles.M_Tiles'"));
+	if (Material.Succeeded()) 
+	{
+		material = UMaterialInstanceDynamic::Create(Material.Object, Material.Object);
+	}
+
+	// Testing noises
+	UBaseNoise* baseNoise = NewObject<UBaseNoise>();
+	noisePatterns.Add(baseNoise);
 }
 /*----------------------------------------------------------------------------------------------------*/
 // Called when the game starts or when spawned
@@ -27,18 +42,29 @@ void AGeneratedWorld::BeginPlay()
 /*----------------------------------------------------------------------------------------------------*/
 void AGeneratedWorld::CreateWorld()
 {
+	// Initializing "3D array".
+	for (int x = 0; x < worldX + 1; ++x)
+	{
+		TArray<TArray<Chunk*>> arrayX;
+		for (int y = 0; y < worldY + 1; ++y)
+		{
+			TArray<Chunk*> arrayY;
+			for (int z = 0; z < 1; ++z)
+			{
+				arrayY.Add(new Chunk());
+			}
+			arrayX.Add(arrayY);
+		}
+		mChunks.Add(arrayX);
+	}
+
 	for (int x = 0; x < worldX; ++x)
 	{
 		for (int y = 0; y < worldY; ++y)
 		{
-			FVector startingPosition = FVector::ZeroVector;
-			startingPosition.X = x * chunkX * 100;
-			startingPosition.Y = y * chunkY * 100;
-
-			RequestWorldGeneration(startingPosition);
+			RequestWorldGeneration(x, y, chunkSizeX, chunkSizeY);
 		}
 	}
-
 }
 /*----------------------------------------------------------------------------------------------------*/
 // Called every frame
@@ -74,7 +100,8 @@ void AGeneratedWorld::Tick(float DeltaTime)
 /*----------------------------------------------------------------------------------------------------*/
 void AGeneratedWorld::LoadMeshData(TArray<TArray<TArray<Block*>>>& createdGrid, MeshData* meshData)
 {
-	grid = createdGrid;
+	Chunk* chunk = new Chunk(meshData->chunkPositionX, meshData->chunkPositionY, meshData->chunkPositionZ, chunkSizeX, chunkSizeY, chunkSizeZ, createdGrid);
+	mChunks[chunk->x][chunk->y][chunk->z] = chunk;
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
@@ -93,37 +120,69 @@ void AGeneratedWorld::LoadMeshData(TArray<TArray<TArray<Block*>>>& createdGrid, 
 	proceduralMesh->ContainsPhysicsTriMeshData(true);	
 }
 /*----------------------------------------------------------------------------------------------------*/
-void AGeneratedWorld::RequestWorldGeneration(FVector origin)
+void AGeneratedWorld::RequestWorldGeneration(int32 x, int32 y, int32 chunkX, int32 chunkY)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Creating new world!!"));
 
 	UWorldChunkStats* stats = NewObject<UWorldChunkStats>(UWorldChunkStats::StaticClass());
-	stats->maxX = chunkX;
-	stats->maxY = chunkY;
-	stats->maxZ = chunkZ;
+	stats->maxX = chunkSizeX;
+	stats->maxY = chunkSizeY;
+	stats->maxZ = chunkSizeZ;
+	stats->chunkPositionX = x;
+	stats->chunkPositionY = y;
 	stats->baseNoise = baseNoise;
 	stats->baseNoiseHeight = baseNoiseHeight;
 	stats->elevation = elevation;
 	stats->frequency = frequency;
-	stats->mOrigin = origin;
+	stats->mOrigin = FVector(x * chunkSizeX * 100.0f, y * chunkSizeY * 100.0f, 0.0f);
 	stats->mNoisePatterns = noisePatterns;
 
 	WorldGeneration* worldGeneration = new WorldGeneration(stats, this);
 	toDoJobs.Add(worldGeneration);
 }
 /*----------------------------------------------------------------------------------------------------*/
-Block* AGeneratedWorld::GetBlock(int32 x, int32 y, int32 z)
+Block* AGeneratedWorld::GetBlockFromWorldPosition(FVector worldPosition)
 {
-	if (x < 0 || y < 0 || z < 0 || x > chunkX - 1 || y > chunkY - 1 || z > elevation - 1)
+	int chunkPositionX = FMath::FloorToInt(worldPosition.X / (100.0f * chunkSizeX));
+	int chunkPositionY = FMath::FloorToInt(worldPosition.Y / (100.0f * chunkSizeY));
+	int chunkPositionZ = FMath::FloorToInt(worldPosition.Z / (100.0f * chunkSizeZ));
+
+	Chunk* chunk = GetChunk(chunkPositionX, chunkPositionY, chunkPositionZ);
+
+	if (chunk == nullptr)
 	{
 		return nullptr;
 	}
 
-	return grid[x][y][z];
+	return chunk->GetBlock(worldPosition);
 }
 /*----------------------------------------------------------------------------------------------------*/
-Block* GetBlockFromWorldPosition(FVector worldPosition)
+Chunk* AGeneratedWorld::GetChunk(int32 x, int32 y, int32 z)
 {
-	return nullptr;
+	if (x < 0 || y < 0 || z < 0 || x > worldX || y > worldY)
+	{
+		return nullptr;
+	}
+	
+	return mChunks[x][y][z];
+}
+/*----------------------------------------------------------------------------------------------------*/
+AGeneratedWorld* GetGeneratedWorld(const UObject* worldContextObject)
+{
+	if (worldContextObject == nullptr)
+	{
+		return nullptr;
+	}
+	UWorld* world = worldContextObject->GetWorld();
+	if (world == nullptr)
+	{
+		return nullptr;
+	}
+	AProceduralWorldGameModeBase* gameMode = Cast<AProceduralWorldGameModeBase>(world->GetAuthGameMode());
+	if (gameMode == nullptr)
+	{
+		return nullptr;
+	}
+	return gameMode->GetGeneratedWorld();
 }
 /*----------------------------------------------------------------------------------------------------*/

@@ -15,30 +15,30 @@ Block::~Block()
 
 void Block::LoadBlock(MeshData* meshData, WorldGeneration* world)
 {
-	MeshCreatorUtilities::FaceUp(meshData, worldPosition);
+	MeshCreatorUtilities::FaceUp(meshData, localPosition);
 
 	Block* north = world->GetBlock(x + 1, y, z);
 	if (north == nullptr || !north->isSolid)
 	{
-		MeshCreatorUtilities::FaceNorth(meshData, worldPosition);
+		MeshCreatorUtilities::FaceNorth(meshData, localPosition);
 	}
 	
 	Block* south = world->GetBlock(x - 1, y, z);
 	if (south == nullptr || !south->isSolid)
 	{
-		MeshCreatorUtilities::FaceSouth(meshData, worldPosition);
+		MeshCreatorUtilities::FaceSouth(meshData, localPosition);
 	}
 
 	Block* west = world->GetBlock(x, y - 1, z);
 	if (west == nullptr || !west->isSolid)
 	{
-		MeshCreatorUtilities::FaceWest(meshData, worldPosition);
+		MeshCreatorUtilities::FaceWest(meshData, localPosition);
 	}
 
 	Block* east = world->GetBlock(x, y + 1, z);
 	if (east == nullptr || !east->isSolid)
 	{
-		MeshCreatorUtilities::FaceEast(meshData, worldPosition);
+		MeshCreatorUtilities::FaceEast(meshData, localPosition);
 	}
 	
 

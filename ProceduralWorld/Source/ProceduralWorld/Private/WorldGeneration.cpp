@@ -1,5 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*----------------------------------------------------------------------------------------------------*/
 #include "WorldGeneration.h"
 #include "SimplexNoise.h"
 #include "MeshData.h"
@@ -8,34 +8,39 @@
 #include "Block.h"
 #include "NoiseBase.h"
 #include "BaseNoise.h"
+/*----------------------------------------------------------------------------------------------------*/
 WorldGeneration::WorldGeneration(UWorldChunkStats* stats, const AGeneratedWorld* generatedWorld): mJobDone(false)
 {
 	mStats = stats;
 	mFinishCallback.BindUObject(generatedWorld, &AGeneratedWorld::LoadMeshData);
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 WorldGeneration::~WorldGeneration()
 {
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 uint32 WorldGeneration::Run()
 {
 	mMeshData = CreateChunk();
+	mMeshData->chunkPositionX = mStats->chunkPositionX;
+	mMeshData->chunkPositionY = mStats->chunkPositionY;
+	mMeshData->chunkPositionZ = mStats->chunkPositionZ;
+
 	mJobDone = true;
 
 	return 0;
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 void WorldGeneration::NotifyComplete()
 {
 	mFinishCallback.Execute(mGrid, mMeshData);
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 int32 WorldGeneration::GetNoise(float x, float y, float z, float scale, int32 max)
 {
 	return FMath::FloorToInt((SimplexNoise::noise(x * scale, y * scale, z * scale) + 1) * (max / 2.0f));
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 MeshData* WorldGeneration::CreateChunk()
 {
 	// Initializing "3D array".
@@ -84,7 +89,8 @@ MeshData* WorldGeneration::CreateChunk()
 			}
 
 			targetPosition.Z += height * 100;
-			mGrid[x][y][FMath::FloorToInt(height)]->worldPosition = targetPosition;
+			mGrid[x][y][FMath::FloorToInt(height)]->localPosition = targetPosition;
+			mGrid[x][y][FMath::FloorToInt(height)]->worldPosition = targetPosition + mStats->mOrigin;
 
 			mGrid[x][y][FMath::FloorToInt(height)]->x = x;
 			mGrid[x][y][FMath::FloorToInt(height)]->y = y;
@@ -103,7 +109,7 @@ MeshData* WorldGeneration::CreateChunk()
 	meshData->mOrigin = mStats->mOrigin;
 	return meshData;
 }
-
+/*----------------------------------------------------------------------------------------------------*/
 Block* WorldGeneration::GetBlock(int32 x, int32 y, int32 z)
 {
 	if (x < 0 || y < 0 || z < 0 || x > mStats->maxX - 1 || y > mStats->maxY - 1 || z > mStats->elevation - 1)
@@ -113,4 +119,4 @@ Block* WorldGeneration::GetBlock(int32 x, int32 y, int32 z)
 
 	return mGrid[x][y][z];
 }
-
+/*----------------------------------------------------------------------------------------------------*/

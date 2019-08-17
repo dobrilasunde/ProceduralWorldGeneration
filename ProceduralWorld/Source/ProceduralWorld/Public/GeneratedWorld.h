@@ -11,6 +11,7 @@ class WorldGeneration;
 class MeshData;
 class Block;
 class UNoiseBase;
+class Chunk;
 /*----------------------------------------------------------------------------------------------------*/
 UCLASS()
 class PROCEDURALWORLD_API AGeneratedWorld : public AActor
@@ -23,10 +24,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void LoadMeshData(TArray<TArray<TArray<Block*>>>& createdGrid, MeshData* meshData);
-	void RequestWorldGeneration(FVector origin);
+	void RequestWorldGeneration(int32 x, int32 y, int32 chunkX, int32 chunkY);
 	void CreateWorld();
-	Block* GetBlock(int32 x, int32 y, int32 z);
 	Block* GetBlockFromWorldPosition(FVector worldPosition);
+	Chunk* GetChunk(int32 x, int32 y, int32 z);
 
 protected:
 	// Called when the game starts or when spawned
@@ -34,23 +35,23 @@ protected:
 
 public:
 	UPROPERTY(EditAnywhere)
-	int32 worldX = 4;
+	int32 worldX = 2;
 	UPROPERTY(EditAnywhere)
-	int32 worldY = 4;
+	int32 worldY = 2;
 	UPROPERTY(EditAnywhere)
-	int32 chunkX = 16;
+	int32 chunkSizeX = 16;
 	UPROPERTY(EditAnywhere)
-	int32 chunkY = 16;
+	int32 chunkSizeY = 16;
 	UPROPERTY(EditAnywhere)
-	int32 chunkZ = 10;
+	int32 chunkSizeZ = 10;
 	UPROPERTY(EditAnywhere)
 	float baseNoise = 0.02f;
 	UPROPERTY(EditAnywhere)
 	int32 baseNoiseHeight = 4;
 	UPROPERTY(EditAnywhere)
-	int32 elevation = 15;
+	int32 elevation = 5;
 	UPROPERTY(EditAnywhere)
-	float frequency = 0.005f;
+	float frequency = 0.05f;
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* material;
 	UPROPERTY(EditAnywhere, Instanced)
@@ -63,7 +64,9 @@ public:
 	FRunnableThread* Thread;
 
 private:
-	TArray<TArray<TArray<Block*>>> grid;
+	TArray<TArray<TArray<Chunk*>>> mChunks;
 	int32 mThreadCounter;
 };
+/*----------------------------------------------------------------------------------------------------*/
+PROCEDURALWORLD_API AGeneratedWorld* GetGeneratedWorld(const UObject* worldContextObject);
 /*----------------------------------------------------------------------------------------------------*/

@@ -1,13 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
+/*----------------------------------------------------------------------------------------------------*/
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "WorldChunkStats.generated.h"
-
+/*----------------------------------------------------------------------------------------------------*/
 class UNoiseBase;
-
+/*----------------------------------------------------------------------------------------------------*/
 UCLASS(BlueprintType)
 class PROCEDURALWORLD_API UWorldChunkStats: public UObject
 {
@@ -18,6 +18,11 @@ public:
 	int32 maxX = 16;
 	int32 maxY = 16;
 	int32 maxZ = 10;
+
+	int32 chunkPositionX;
+	int32 chunkPositionY;
+	int32 chunkPositionZ;
+
 	float baseNoise = 0.02f;
 	int32 baseNoiseHeight = 4;
 	int32 elevation = 15;
@@ -26,3 +31,4 @@ public:
 
 	TArray<UNoiseBase*> mNoisePatterns;
 };
+/*----------------------------------------------------------------------------------------------------*/
