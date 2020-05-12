@@ -7,6 +7,7 @@
 #include "ProceduralWorldGameModeBase.generated.h"
 /*----------------------------------------------------------------------------------------------------*/
 class AGeneratedWorld;
+class APathfinderMaster;
 /*----------------------------------------------------------------------------------------------------*/
 UCLASS()
 class PROCEDURALWORLD_API AProceduralWorldGameModeBase : public AGameModeBase
@@ -21,10 +22,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AGeneratedWorld* GetGeneratedWorld() const;
 
+	UFUNCTION(BlueprintCallable)
+	APathfinderMaster* GetPathfinderMaster() const;
+
 public:
 	UPROPERTY(EditAnywhere, Category = "Classes")
 	TSubclassOf<AGeneratedWorld> _generatedWorldClass;
 	UPROPERTY()
-	AGeneratedWorld* _generatedWorld;	
+	AGeneratedWorld* _generatedWorld;
+
+	UPROPERTY(EditAnywhere, Category = "Classes")
+	TSubclassOf<APathfinderMaster> _pathfinderMasterClass;
+	UPROPERTY()
+	APathfinderMaster* _pathfinderMaster;
 };
 /*----------------------------------------------------------------------------------------------------*/
