@@ -12,6 +12,7 @@ class MeshData;
 class Block;
 class UNoiseBase;
 class Chunk;
+class AStaticMeshActor;
 /*----------------------------------------------------------------------------------------------------*/
 UCLASS()
 class PROCEDURALWORLD_API AGeneratedWorld : public AActor
@@ -52,7 +53,7 @@ public:
 	int32 elevation = 5;
 	UPROPERTY(EditAnywhere)
 	float frequency = 0.05f;
-	UPROPERTY(EditAnywhere)
+
 	UMaterialInterface* material;
 	UPROPERTY(EditAnywhere, Instanced)
 	TArray<UNoiseBase*> noisePatterns;
@@ -62,6 +63,10 @@ public:
 	TArray<WorldGeneration*> currentJobs;
 
 	FRunnableThread* Thread;
+
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<AStaticMeshActor> _unit;
+	bool _isUnitPlaced;
 
 private:
 	TArray<TArray<TArray<Chunk*>>> mChunks;

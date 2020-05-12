@@ -5,6 +5,10 @@
 #include "Runtime/Engine/Classes/Components/BoxComponent.h"
 #include "GeneratedWorld.h"
 #include "Block.h"
+#include <DrawDebugHelpers.h>
+#include <NoExportTypes.h>
+#include "Engine/StaticMeshActor.h"
+
 /*----------------------------------------------------------------------------------------------------*/
 AGodPlayerController::AGodPlayerController()
 {
@@ -12,12 +16,18 @@ AGodPlayerController::AGodPlayerController()
 	bEnableClickEvents = true;
 	bEnableMouseOverEvents = true;
 }
+//--------------------------------------------------------------------------------------------------
+void AGodPlayerController::Tick(float deltaTime)
+{
+	FindMousePosition();
+	VisualizePosition();
+}
 /*----------------------------------------------------------------------------------------------------*/
 void AGodPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	InputComponent->BindAction("TriggerLeftClick", IE_Pressed, this, &AGodPlayerController::FindMousePosition);
+	//InputComponent->BindAction("TriggerLeftClick", IE_Pressed, this, &AGodPlayerController::FindMousePosition);
 }
 /*----------------------------------------------------------------------------------------------------*/
 void AGodPlayerController::FindMousePosition()
@@ -27,14 +37,14 @@ void AGodPlayerController::FindMousePosition()
 
 	if (hit)
 	{
+		_mousePosition = hitResult.ImpactPoint;
+		//DrawDebugSphere(GetWorld(), hitResult.ImpactPoint, 15.0f, 16, FColor::Yellow, false, 5.0f);
 		UE_LOG(LogTemp, Warning, TEXT("MouseHit: %f %f %f"), hitResult.ImpactPoint.X, hitResult.ImpactPoint.Y, hitResult.ImpactPoint.Z);
-		AActor* hitActor = hitResult.GetActor();
-		UPrimitiveComponent* hitComponent = hitResult.GetComponent();
-
+		
 		Block* block = GetGeneratedWorld(this)->GetBlockFromWorldPosition(hitResult.ImpactPoint);
 		if (block != nullptr)
 		{
-			CreateBox(block->worldPosition + FVector::UpVector * 100.0f / 2.0f);
+			_currentBlock = block;
 		}
 	}
 }
@@ -43,7 +53,7 @@ void AGodPlayerController::CreateBox(FVector position)
 {
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
-	spawnParams.Instigator = Instigator;
+	spawnParams.Instigator = GetInstigator();
 	AActor* emptyActor = GetWorld()->SpawnActor<AActor>(position, FRotator::ZeroRotator, spawnParams);
 
 	UBoxComponent* Box = NewObject<UBoxComponent>(emptyActor);
@@ -52,6 +62,16 @@ void AGodPlayerController::CreateBox(FVector position)
 	Box->RegisterComponentWithWorld(GetWorld());
 
 	emptyActor->SetRootComponent(Box);
+}
+//--------------------------------------------------------------------------------------------------
+void AGodPlayerController::VisualizePosition()
+{
+	if (_currentBlock != nullptr && _visualizer.IsValid())
+	{
+		FTransform newTransform =_visualizer->GetTransform();
+		newTransform.SetTranslation(_currentBlock->worldPosition + FVector::OneVector);
+		_visualizer->SetActorTransform(newTransform);
+	}
 }
 /*----------------------------------------------------------------------------------------------------*/
 

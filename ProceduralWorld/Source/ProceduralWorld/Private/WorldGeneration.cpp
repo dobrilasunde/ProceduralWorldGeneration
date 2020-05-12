@@ -78,8 +78,10 @@ MeshData* WorldGeneration::CreateChunk()
 				for (int i = 0; i < mStats->mNoisePatterns.Num(); ++i)
 				{
 					UNoiseBase* n = mStats->mNoisePatterns[i];
-					height += n->Calculate(mStats, noisePosition);
-
+					if (n != nullptr)
+					{
+						height += n->Calculate(mStats, noisePosition);
+					}
 				}
 			}
 

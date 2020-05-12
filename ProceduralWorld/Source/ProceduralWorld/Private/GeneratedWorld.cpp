@@ -15,6 +15,8 @@
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
 #include "BaseNoise.h"
+#include "Engine/StaticMeshActor.h"
+
 /*----------------------------------------------------------------------------------------------------*/
 // Sets default values
 AGeneratedWorld::AGeneratedWorld(): mThreadCounter(0)
@@ -28,8 +30,8 @@ AGeneratedWorld::AGeneratedWorld(): mThreadCounter(0)
 	}
 
 	// Testing noises
-	UBaseNoise* baseNoise = NewObject<UBaseNoise>();
-	noisePatterns.Add(baseNoise);
+	//UBaseNoise* baseNoise = NewObject<UBaseNoise>();
+	//noisePatterns.Add(baseNoise);
 }
 /*----------------------------------------------------------------------------------------------------*/
 // Called when the game starts or when spawned
@@ -105,7 +107,7 @@ void AGeneratedWorld::LoadMeshData(TArray<TArray<TArray<Block*>>>& createdGrid, 
 
 	FActorSpawnParameters spawnParams;
 	spawnParams.Owner = this;
-	spawnParams.Instigator = Instigator;
+	spawnParams.Instigator = GetInstigator();
 
 	AActor* emptyActor = GetWorld()->SpawnActor<AActor>(meshData->mOrigin, FRotator::ZeroRotator, spawnParams);
 
@@ -117,7 +119,16 @@ void AGeneratedWorld::LoadMeshData(TArray<TArray<TArray<Block*>>>& createdGrid, 
 	
 	proceduralMesh->CreateMeshSection_LinearColor(0, meshData->mVertices, meshData->mTriangles, TArray<FVector>(), meshData->mUV, TArray<FLinearColor>(), TArray<FProcMeshTangent>(), true);
 	proceduralMesh->SetMaterial(0, material);
-	proceduralMesh->ContainsPhysicsTriMeshData(true);	
+	proceduralMesh->ContainsPhysicsTriMeshData(true);
+
+	if (!_isUnitPlaced && _unit != nullptr)
+	{
+		_isUnitPlaced = true;
+		Block* block = chunk->GetFirstSolidBlock();
+		FTransform newTransform = _unit->GetTransform();
+		newTransform.SetTranslation(block->worldPosition + FVector::UpVector * 100.0f);
+		_unit->SetActorTransform(newTransform);
+	}
 }
 /*----------------------------------------------------------------------------------------------------*/
 void AGeneratedWorld::RequestWorldGeneration(int32 x, int32 y, int32 chunkX, int32 chunkY)
@@ -159,7 +170,7 @@ Block* AGeneratedWorld::GetBlockFromWorldPosition(FVector worldPosition)
 /*----------------------------------------------------------------------------------------------------*/
 Chunk* AGeneratedWorld::GetChunk(int32 x, int32 y, int32 z)
 {
-	if (x < 0 || y < 0 || z < 0 || x > worldX || y > worldY || z > 0)
+	if (x < 0 || y < 0 || z < 0 || x > worldX - 1 || y > worldY - 1 || z > 0)
 	{
 		return nullptr;
 	}
